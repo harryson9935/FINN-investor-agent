@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FINN — Investment Agent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              black: '#0a0a0c',
+              surface: '#121217',
+              card: '#181820',
+              border: '#242430',
+              accent: '#10b981',
+              accentMuted: '#064e3b',
+              warning: '#f59e0b',
+              danger: '#ef4444'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #050507; margin: 0; padding: 0; user-select: none; }
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    const IconBell = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+      </svg>
+    );
+
+    const IconSearch = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    );
+
+    const IconCheckCircle = () => (
+      <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
+
+    const IconAlertTriangle = () => (
+      <svg className="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    );
+
+    const IconChevronDown = ({ open }) => (
+      <svg className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    );
+
+    function FinnApp() {
+      const [mode, setMode] = useState('push');
+      const [windowFilter, setWindowFilter] = useState('24h');
+      const [showBoilerplate, setShowBoilerplate] = useState(false);
+      const [pullTicker, setPullTicker] = useState('TRENT.NS');
+      const [activeAuditTab, setActiveAuditTab] = useState('audit');
+
+      const triggerAlerts = [
+        {
+          id: 'a1',
+          ticker: 'KAYNES.NS',
+          tag: 'UNUSUAL VOLUME',
+          headline: 'Volume 3.4x over 20-Day Average',
+          detail: 'Closing at ₹4,820 (+5.8%). Heavy institutional block trade (~420k shares vs ~125k daily run rate).',
+          timestamp: '14:25 IST'
+        },
+        {
+          id: 'a2',
+          ticker: 'HDFCBANK.NS',
+          tag: 'MANAGEMENT DISCLOSURE',
+          headline: 'Head of Wholesale Banking Resigns',
+          detail: 'Incoming: K. Venkat (Ex-Standard Chartered, 18 yrs in Corporate Credit & Structured Finance).',
+          timestamp: '11:10 IST'
+        }
+      ];
+
+      const digestItems = [
+        {
+          id: 'd1',
+          ticker: 'TRENT.NS',
+          title: 'Q2 FY25 Headline Financial Results',
+          tier: 1,
+          time: 'Today, 12:45 IST',
+          hasTable: true,
+          table: {
+            revenue: { val: '₹4,156 Cr', qoq: '+4.2%', yoy: '+39.4%' },
+            ebitda: { val: '₹610 Cr', qoq: '-1.8%', yoy: '+41.2%' },
+            pbt: { val: '₹510 Cr', qoq: '-2.1%', yoy: '+38.5%' },
+            pat: { val: '₹374 Cr', qoq: '-3.0%', yoy: '+44.2%' }
+          },
+          insight: 'Growth driven by 41 new Zudio openings. Operating margin stood at 14.7%, slightly down QoQ due to supply chain scale-up costs.'
+        },
+        {
+          id: 'd2',
+          ticker: 'TATAMOTORS.NS',
+          title: 'Credit Rating Reaffirmation & Outlook Upgrade',
+          tier: 2,
+          time: 'Yesterday, 18:20 IST',
+          hasTable: false,
+          insight: 'CRISIL upgrades long-term debt rating to AAA (Stable). Cites significant deleveraging in JLR operations.'
+        },
+        {
+          id: 'd3',
+          ticker: 'TCS.NS',
+          title: 'Trading Window Closure for Q3 Board Meeting',
+          tier: 3,
+          time: 'Yesterday, 09:15 IST',
+          hasTable: false,
+          insight: 'Statutory compliance notification under SEBI (Prohibition of Insider Trading) Regulations.'
+        }
+      ];
+
+      const auditRecords = [
+        {
+          id: 'r1',
+          metric: 'Westside Operating Margin',
+          guidance: 'Q3 FY24 Concall: "Expect ~11% EBIT margin as domestic supply chains normalize."',
+          actual: 'Q2 FY25 Audited: Delivered 11.4% EBIT margin.',
+          verdict: 'DELIVERED',
+          status: 'success'
+        },
+        {
+          id: 'r2',
+          metric: 'Star Bazaar Store-Level Breakeven',
+          guidance: 'Q4 FY24 Concall: "Star Bazaar JV to achieve store-level EBITDA neutrality by mid-FY25."',
+          actual: 'Q2 FY25 Audited: Target shifted to late FY26 citing store clustering investments.',
+          verdict: 'REFRAMED',
+          status: 'warning'
+        },
+        {
+          id: 'r3',
+          metric: 'Zudio Store Additions',
+          guidance: 'Q1 FY25 Concall: "Targeting 35-40 gross store additions next quarter."',
+          actual: 'Q2 FY25 Audited: Added 41 net new retail locations.',
+          verdict: 'DELIVERED',
+          status: 'success'
+        }
+      ];
+
+      return (
+        <div className="flex justify-center min-h-screen bg-black">
+          <div className="w-full max-w-[430px] min-h-screen bg-brand-surface flex flex-col border-x border-brand-border text-neutral-200">
+            <header className="px-4 py-3 bg-brand-black/90 backdrop-blur-md border-b border-brand-border sticky top-0 z-20 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold tracking-tight text-white text-base">FINN</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-accentMuted text-brand-accent font-semibold tracking-wide">NSE RADAR</span>
+                </div>
+                <p className="text-[10px] text-neutral-400">Signal-First Intelligence</p>
+              </div>
+
+              {mode === 'push' && (
+                <div className="flex bg-brand-card p-0.5 rounded-lg border border-brand-border">
+                  {['6h', '24h', '7d'].map((win) => (
+                    <button
+                      key={win}
+                      onClick={() => setWindowFilter(win)}
+                      className={`text-[11px] px-2 py-0.5 rounded font-medium transition-all ${
+                        windowFilter === win ? 'bg-neutral-700 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'
+                      }`}
+                    >
+                      {win}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </header>
+
+            <main className="flex-1 overflow-y-auto p-4 space-y-4">
+              {mode === 'push' && (
+                <>
+                  <section>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Triggered Thresholds</span>
+                      <span className="text-[9px] font-mono text-neutral-500">Vol &gt; 2.0x | Move &gt; ±4.0%</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {triggerAlerts.map((alert) => (
+                        <div key={alert.id} className="p-3 rounded-xl bg-brand-card border border-brand-border space-y-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-xs text-white">{alert.ticker}</span>
+                              <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                {alert.tag}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-neutral-500 font-mono">{alert.timestamp}</span>
+                          </div>
+                          <div className="text-xs font-medium text-neutral-100">{alert.headline}</div>
+                          <div className="text-[11px] text-neutral-400 leading-snug">{alert.detail}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                        Portfolio Digest ({windowFilter})
+                      </span>
+                      <span className="text-[9px] text-neutral-500">Filtered & Ranked</span>
+                    </div>
+
+                    {digestItems.filter(item => item.tier <= 2).map((item) => (
+                      <div key={item.id} className="p-3.5 rounded-xl bg-brand-card/80 border border-brand-border space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-brand-accent">{item.ticker}</span>
+                            <span className="text-[11px] font-semibold text-white">{item.title}</span>
+                          </div>
+                          <span className="text-[9px] font-mono text-neutral-500">{item.time}</span>
+                        </div>
+
+                        {item.hasTable && (
+                          <div className="p-2.5 rounded-lg bg-brand-black border border-brand-border">
+                            <div className="grid grid-cols-4 gap-1 text-center pb-1.5 border-b border-neutral-800">
+                              <span className="text-[9px] uppercase font-mono text-neutral-500">Metric</span>
+                              <span className="text-[9px] uppercase font-mono text-neutral-500">Value</span>
+                              <span className="text-[9px] uppercase font-mono text-neutral-500">QoQ</span>
+                              <span className="text-[9px] uppercase font-mono text-neutral-500">YoY</span>
+                            </div>
+                            <div className="space-y-1.5 pt-1.5 text-xs">
+                              {Object.entries(item.table).map(([k, v]) => (
+                                <div key={k} className="grid grid-cols-4 gap-1 text-center items-center">
+                                  <span className="text-[10px] font-mono uppercase text-neutral-400 text-left pl-1">{k}</span>
+                                  <span className="font-semibold text-neutral-200">{v.val}</span>
+                                  <span className={`text-[10px] font-mono ${v.qoq.startsWith('+') ? 'text-emerald-400' : 'text-rose-400'}`}>{v.qoq}</span>
+                                  <span className="text-[10px] font-mono text-emerald-400">{v.yoy}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <p className="text-[11px] text-neutral-300 leading-relaxed">{item.insight}</p>
+
+                        <div className="flex items-center justify-between pt-1 border-t border-neutral-800/60">
+                          <span className="text-[9px] font-mono text-neutral-500">Source: NSE Statutory Filing</span>
+                          <button
+                            onClick={() => { setPullTicker(item.ticker); setMode('pull'); }}
+                            className="text-[10px] font-medium text-brand-accent hover:underline flex items-center gap-0.5"
+                          >
+                            Analyze in Terminal →
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="pt-2">
+                      <button
+                        onClick={() => setShowBoilerplate(!showBoilerplate)}
+                        className="w-full py-2 px-3 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-between text-neutral-400 hover:text-neutral-200 text-xs"
+                      >
+                        <span className="text-[11px]">Routine Disclosures (1 Suppressed)</span>
+                        <IconChevronDown open={showBoilerplate} />
+                      </button>
+
+                      {showBoilerplate && (
+                        <div className="mt-2 p-3 rounded-lg bg-neutral-900/60 border border-neutral-800/80 space-y-1.5">
+                          {digestItems.filter(item => item.tier === 3).map(b => (
+                            <div key={b.id} className="text-xs flex items-center justify-between py-1 border-b border-neutral-800 last:border-0">
+                              <div>
+                                <span className="font-semibold text-neutral-400 mr-2">{b.ticker}</span>
+                                <span className="text-neutral-500">{b.title}</span>
+                              </div>
+                              <span className="text-[9px] font-mono text-neutral-600">{b.time}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                </>
+              )}
+
+              {mode === 'pull' && (
+                <div className="space-y-4">
+                  <div className="p-3 rounded-xl bg-brand-card border border-brand-border space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-neutral-400">RESEARCH TERMINAL</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-300 font-mono">PRIMARY SOURCES ONLY</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="text" 
+                        value={pullTicker}
+                        onChange={(e) => setPullTicker(e.target.value.toUpperCase())}
+                        className="flex-1 bg-brand-black border border-brand-border rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-brand-accent"
+                        placeholder="Search NSE Ticker..."
+                      />
+                      <button className="px-3 py-1.5 bg-brand-accent text-brand-black text-xs font-bold rounded-lg hover:bg-emerald-400 transition-all">
+                        Fetch
+                      </button>
+                    </div>
+                    <div className="flex gap-1 overflow-x-auto pt-1">
+                      {['TRENT.NS', 'KAYNES.NS', 'HDFCBANK.NS', 'DIXON.NS', 'ZOMATO.NS'].map(t => (
+                        <button
+                          key={t}
+                          onClick={() => setPullTicker(t)}
+                          className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                            pullTicker === t ? 'bg-neutral-700 text-white' : 'bg-neutral-800/60 text-neutral-400'
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex border-b border-brand-border text-xs">
+                    <button
+                      onClick={() => setActiveAuditTab('audit')}
+                      className={`pb-2 px-3 font-medium transition-all ${
+                        activeAuditTab === 'audit' ? 'text-brand-accent border-b-2 border-brand-accent font-semibold' : 'text-neutral-500'
+                      }`}
+                    >
+                      Narrative vs. Numbers
+                    </button>
+                    <button
+                      onClick={() => setActiveAuditTab('cash')}
+                      className={`pb-2 px-3 font-medium transition-all ${
+                        activeAuditTab === 'cash' ? 'text-brand-accent border-b-2 border-brand-accent font-semibold' : 'text-neutral-500'
+                      }`}
+                    >
+                      Cash Quality
+                    </button>
+                    <button
+                      onClick={() => setActiveAuditTab('thesis')}
+                      className={`pb-2 px-3 font-medium transition-all ${
+                        activeAuditTab === 'thesis' ? 'text-brand-accent border-b-2 border-brand-accent font-semibold' : 'text-neutral-500'
+                      }`}
+                    >
+                      Bull / Bear
+                    </button>
+                  </div>
+
+                  {activeAuditTab === 'audit' && (
+                    <div className="space-y-3">
+                      <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 text-xs text-amber-300 flex items-start gap-2">
+                        <IconAlertTriangle />
+                        <div>
+                          <span className="font-semibold block text-[11px]">Audit Engine: 4-Quarter Concall Tracking</span>
+                          <span className="text-[10px] text-amber-300/80 leading-tight block">
+                            Cross-referencing stated management commitments against subsequent statutory results filings.
+                          </span>
+                        </div>
+                      </div>
+
+                      {auditRecords.map((rec) => (
+                        <div key={rec.id} className="p-3 rounded-xl bg-brand-card border border-brand-border space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-white">{rec.metric}</span>
+                            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${
+                              rec.status === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            }`}>
+                              {rec.status === 'success' ? <IconCheckCircle /> : <IconAlertTriangle />}
+                              {rec.verdict}
+                            </span>
+                          </div>
+
+                          <div className="text-[11px] space-y-1 bg-brand-black p-2.5 rounded-lg border border-neutral-800">
+                            <div className="text-neutral-400">
+                              <span className="text-neutral-500 font-mono text-[10px] block">{rec.guidance.split(':')[0]}</span>
+                              <span className="italic">{rec.guidance.split(':')[1]}</span>
+                            </div>
+                            <div className="text-neutral-200 pt-1 border-t border-neutral-800/80">
+                              <span className="text-neutral-500 font-mono text-[10px] block">{rec.actual.split(':')[0]}</span>
+                              <span>{rec.actual.split(':')[1]}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {activeAuditTab === 'cash' && (
+                    <div className="space-y-3">
+                      <div className="p-3.5 rounded-xl bg-brand-card border border-brand-border space-y-2">
+                        <span className="text-xs font-bold text-white block">Cash Flow Quality (FY24 / LTM)</span>
+                        <div className="grid grid-cols-2 gap-2 text-center">
+                          <div className="p-2.5 rounded-lg bg-brand-black border border-neutral-800">
+                            <span className="text-[9px] uppercase font-mono text-neutral-500 block">CFO / EBITDA</span>
+                            <span className="text-sm font-bold text-emerald-400">92.4%</span>
+                            <span className="text-[9px] text-neutral-400 block mt-0.5">High Cash Conversion</span>
+                          </div>
+                          <div className="p-2.5 rounded-lg bg-brand-black border border-neutral-800">
+                            <span className="text-[9px] uppercase font-mono text-neutral-500 block">Working Capital Days</span>
+                            <span className="text-sm font-bold text-white">34 Days</span>
+                            <span className="text-[9px] text-neutral-400 block mt-0.5">-3 Days Improvement YoY</span>
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-neutral-300 leading-relaxed pt-1">
+                          Audited balance sheet checks confirm inventory turns remain flat at 4.2x despite store additions. Trade receivables are under 2% of total assets, indicating minimal wholesale dealer channel-stuffing.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeAuditTab === 'thesis' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-900/40 space-y-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block">Bull Framework</span>
+                        <ul className="text-[10px] text-neutral-300 space-y-1 list-disc list-inside">
+                          <li>Zudio unit economics hold in Tier 3/4 towns with &lt;18 month capex payback.</li>
+                          <li>Negative working capital in flagship formats.</li>
+                        </ul>
+                      </div>
+                      <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-900/40 space-y-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 block">Bear Framework</span>
+                        <ul className="text-[10px] text-neutral-300 space-y-1 list-disc list-inside">
+                          <li>Same-store sales growth (SSSG) moderation risk as store density peaks.</li>
+                          <li>Valuation multiple leaves minimal margin of safety for supply disruptions.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </main>
+
+            <nav className="h-14 bg-brand-black border-t border-brand-border grid grid-cols-2 text-xs">
+              <button
+                onClick={() => setMode('push')}
+                className={`flex flex-col items-center justify-center gap-1 transition-all ${
+                  mode === 'push' ? 'text-brand-accent font-semibold' : 'text-neutral-500 hover:text-neutral-300'
+                }`}
+              >
+                <IconBell />
+                <span className="text-[10px]">Push Radar</span>
+              </button>
+              <button
+                onClick={() => setMode('pull')}
+                className={`flex flex-col items-center justify-center gap-1 transition-all ${
+                  mode === 'pull' ? 'text-brand-accent font-semibold' : 'text-neutral-500 hover:text-neutral-300'
+                }`}
+              >
+                <IconSearch />
+                <span className="text-[10px]">Pull Terminal</span>
+              </button>
+            </nav>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<FinnApp />);
+  </script>
+</body>
+</html>
